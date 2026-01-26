@@ -8,8 +8,6 @@
     <string>hidecursor</string>
     <key>CFBundleVersion</key>
     <string>1.0</string>
-    <key>LSBackgroundOnly</key>
-    <true/>
     <key>LSUIElement</key>
     <true/>
 </dict>
