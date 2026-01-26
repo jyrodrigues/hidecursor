@@ -16,6 +16,7 @@ class CursorHider {
     private let timeout: TimeInterval
     private var isCursorHidden = false
     private var globalMonitor: Any?
+    private var appActivationObserver: NSObjectProtocol?
     private let displayID = CGMainDisplayID()
 
     init(timeout: TimeInterval) {
@@ -26,6 +27,7 @@ class CursorHider {
         enableBackgroundCursorControl()
         startTimer()
         setupGlobalMonitor()
+        setupAppActivationMonitor()
         NSApplication.shared.run()
     }
 
@@ -74,14 +76,32 @@ class CursorHider {
         }
     }
 
+    private func setupAppActivationMonitor() {
+        appActivationObserver = NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.didActivateApplicationNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.handleAppSwitch()
+        }
+    }
+
     private func handleMouseActivity() {
         showCursor()
+        startTimer()
+    }
+
+    private func handleAppSwitch() {
+        isCursorHidden = false
         startTimer()
     }
 
     deinit {
         if let monitor = globalMonitor {
             NSEvent.removeMonitor(monitor)
+        }
+        if let observer = appActivationObserver {
+            NSWorkspace.shared.notificationCenter.removeObserver(observer)
         }
         timer?.invalidate()
         showCursor()
