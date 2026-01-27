@@ -19,18 +19,62 @@ class CursorHider {
     private var appActivationObserver: NSObjectProtocol?
     private let displayID = CGMainDisplayID()
     private var statusItem: NSStatusItem?
+    private var hasInputMonitoringPermission = false
 
     init(timeout: TimeInterval) {
         self.timeout = timeout
     }
 
     func start() {
+        hasInputMonitoringPermission = checkInputMonitoringPermission()
+        if !hasInputMonitoringPermission {
+            printPermissionInstructions()
+        }
+
         enableBackgroundCursorControl()
         setupMenuBar()
         startTimer()
         setupGlobalMonitor()
         setupAppActivationMonitor()
         NSApplication.shared.run()
+    }
+
+    private func checkInputMonitoringPermission() -> Bool {
+        if CGPreflightListenEventAccess() {
+            return true
+        }
+        // Request permission - triggers system dialog on first call
+        return CGRequestListenEventAccess()
+    }
+
+    private func printPermissionInstructions() {
+        let isRunningFromTerminal = ProcessInfo.processInfo.environment["TERM"] != nil
+
+        fputs("\n", stderr)
+        fputs("========================================\n", stderr)
+        fputs("  INPUT MONITORING PERMISSION REQUIRED\n", stderr)
+        fputs("========================================\n", stderr)
+        fputs("\n", stderr)
+
+        if isRunningFromTerminal {
+            fputs("You are running this app from a terminal.\n", stderr)
+            fputs("Please enable Input Monitoring for your terminal app:\n", stderr)
+            fputs("\n", stderr)
+            fputs("1. Open System Settings > Privacy & Security > Input Monitoring\n", stderr)
+            fputs("2. Click '+' and add your terminal app (Terminal, iTerm, Warp, etc.)\n", stderr)
+            fputs("3. Restart your terminal and run this app again\n", stderr)
+        } else {
+            fputs("Please enable Input Monitoring for HideCursor:\n", stderr)
+            fputs("\n", stderr)
+            fputs("1. Open System Settings > Privacy & Security > Input Monitoring\n", stderr)
+            fputs("2. Click '+' and add this app\n", stderr)
+            fputs("3. Restart the app\n", stderr)
+        }
+
+        fputs("\n", stderr)
+        fputs("Without this permission, the cursor will hide but won't\n", stderr)
+        fputs("reappear when you move the mouse.\n", stderr)
+        fputs("\n", stderr)
     }
 
     private func setupMenuBar() {
@@ -155,6 +199,10 @@ class CursorHider {
 
         globalMonitor = NSEvent.addGlobalMonitorForEvents(matching: eventMask) { [weak self] _ in
             self?.handleMouseActivity()
+        }
+
+        if globalMonitor == nil && !hasInputMonitoringPermission {
+            fputs("Warning: Global mouse monitor failed to initialize.\n", stderr)
         }
     }
 
