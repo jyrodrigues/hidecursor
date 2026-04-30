@@ -5,15 +5,17 @@ A macOS utility that automatically hides the cursor after a period of inactivity
 ## Usage
 
 ```bash
-# Build the app
-make build
+# Build and install to ~/.local/bin
+just install
 
 # Run with default 3-second timeout
-make run
+hidecursor
 
-# Or run directly with custom timeout (in seconds)
-.build/release/hidecursor 5
+# Or run with custom timeout (in seconds)
+hidecursor 5
 ```
+
+Make sure `~/.local/bin` is on your `PATH`.
 
 ## Required Permissions
 
@@ -27,7 +29,7 @@ If you run this app from Terminal, iTerm, Warp, or another terminal emulator, yo
 2. Click the **+** button
 3. Navigate to `/Applications` and select your terminal app
 4. **Restart your terminal** for the permission to take effect
-5. Run `make run` again
+5. Run `hidecursor` again
 
 ### When Running Directly
 
@@ -73,7 +75,8 @@ tccutil reset All com.googlecode.iterm2
 Requires Swift 5.9+ and macOS 12+.
 
 ```bash
-make build   # Build release binary
-make run     # Build and run
-make clean   # Clean build artifacts
+just build     # Build release binary
+just run       # Build and run
+just install   # Build and install to ~/.local/bin
+just clean     # Clean build artifacts
 ```
